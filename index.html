@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Document</title>
+</head>
+
+<body>
+    <select>
+        <option>Please Select</option>
+        <option>dodecahedron.obj</option>
+        <option>hexahedron.obj</option>
+        <option>icosahedron.obj</option>
+        <option>octahedron.obj</option>
+        <option>tetrahedron.obj</option>
+    </select>
+    <pre></pre>
+    <script>
+        function loadObj(url) {
+            return new Promise((resolve, reject) => {
+                fetch(url)
+                    .then(res => res.text())
+                    .then(text => {
+                        var lines = text.split('\n').map(ln => ln.trim());
+                        var tokens = lines.map(ln => ln.split(/\s+/g));
+
+                        var verts = tokens.filter(t => t[0] === 'v').map(t => t.slice(1).map(n => parseFloat(n)));
+                        var norms = tokens.filter(t => t[0] === 'vn').map(t => t.slice(1).map(n => parseFloat(n)));
+                        var faces = tokens.filter(t => t[0] === 'f').map(t => t.slice(1).map(f => f.split('/').map(n => parseInt(n))));
+                        var indices = faces.flat();
+
+                        resolve({
+                            vertices: verts
+                        });
+                    });
+            });
+        }
+
+        document.querySelector('select').addEventListener('change', e => {
+            loadObj(e.target.value).then(data => {
+                var max = Math.max(...data.vertices.map(v => Math.max(...v)));
+                data.vertices = data.vertices.map(v => v.map(u => 0.5 * u / max));
+                document.querySelector('pre').innerHTML = data.vertices.map(v => 'v ' + v.join(' ')).join('\r\n');
+            });
+        });
+    </script>
+</body>
+
+</html>
